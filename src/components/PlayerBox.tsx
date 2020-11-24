@@ -1,7 +1,8 @@
-import React, { useEffect, useState } from "react";
+import React, { useContext, useEffect, useState } from "react";
 import styled from "styled-components";
 import colors from "./colors";
 import WebTorrent from "webtorrent";
+import { AppContext } from "../App";
 
 type ProgressBarType = {
   progress: number;
@@ -12,6 +13,7 @@ const Container = styled.div`
   height: 480px;
   width: 100%;
   box-shadow: inset 0px -4px 24px -5px rgba(0, 0, 0, 0.75);
+  transition: all 0.5s ease-in;
 `;
 
 const ProgressBar = styled.div<ProgressBarType>`
@@ -38,6 +40,8 @@ const Video = styled.video`
 `;
 
 const PlayerBox: React.FC = () => {
+  const ctx = useContext(AppContext);
+
   const [torrentProgress, setTorrentProgress] = useState(0);
   const [torrentInfos, setTorrentInfos] = useState(
     {} as {
@@ -50,18 +54,18 @@ const PlayerBox: React.FC = () => {
   const [mp4File, setMp4File] = useState(null);
 
   useEffect(() => {
-    // Sintel, a free, Creative Commons movie
-    var torrentId =
-      "magnet:?xt=urn:btih:08ada5a7a6183aae1e09d831df6748d566095a10&dn=Sintel&tr=udp%3A%2F%2Fexplodie.org%3A6969&tr=udp%3A%2F%2Ftracker.coppersurfer.tk%3A6969&tr=udp%3A%2F%2Ftracker.empire-js.us%3A1337&tr=udp%3A%2F%2Ftracker.leechers-paradise.org%3A6969&tr=udp%3A%2F%2Ftracker.opentrackr.org%3A1337&tr=wss%3A%2F%2Ftracker.btorrent.xyz&tr=wss%3A%2F%2Ftracker.fastcast.nz&tr=wss%3A%2F%2Ftracker.openwebtorrent.com&ws=https%3A%2F%2Fwebtorrent.io%2Ftorrents%2F&xs=https%3A%2F%2Fwebtorrent.io%2Ftorrents%2Fsintel.torrent";
-
     var client = new WebTorrent();
 
     client.on("error", (err: { message: string }) => {
+      console.log(ctx.movie);
+      console.error(err);
       console.log("[+] Webtorrent error: " + err.message);
     });
 
+    console.log(ctx.movie);
+
     client.add(
-      torrentId,
+      ctx.movie,
       (torrent: {
         progress: number;
         on: (arg0: string, arg1: () => void) => void;
@@ -90,6 +94,7 @@ const PlayerBox: React.FC = () => {
         });
 
         var mp4File = torrent.files.find(function (file: { name: string }) {
+          console.log(file);
           return file.name.endsWith(".mp4");
         });
 
@@ -98,32 +103,31 @@ const PlayerBox: React.FC = () => {
         setMp4File(mp4File.path);
 
         var file = torrent.files.find(function (file) {
-          return file.name.endsWith(".mp4");
+          return file.name.toLowerCase().endsWith(".mp4");
         });
 
         file.renderTo("#player");
       }
     );
-  }, []);
+  }, [ctx.movie]);
 
   return (
-    <>
+    <Container>
       <ProgressBar progress={torrentProgress} />
-      <Container>
-        <Video
-          id="player"
-          autoPlay
-          controls
-          preload="auto"
-          onProgress={(e) =>
-            // tslint-ignore
-            setTorrentProgress(
-              ((e.target as any).currentTime * 100) / (e.target as any).duration
-            )
-          }
-        />
+      <Video
+        id="player"
+        autoPlay
+        controls
+        preload="auto"
+        onProgress={(e) =>
+          // tslint-ignore
+          setTorrentProgress(
+            ((e.target as any).currentTime * 100) / (e.target as any).duration
+          )
+        }
+      />
 
-        {/* <h1>{torrentInfos.torrentName}</h1>
+      {/* <h1>{torrentInfos.torrentName}</h1>
         <p>
           <b>Torrent Info Hash: </b>
           {torrentInfos.torrentInfoHash}
@@ -132,8 +136,7 @@ const PlayerBox: React.FC = () => {
           <b>Torrent Progress: </b>
           {torrentProgress}
         </p> */}
-      </Container>
-    </>
+    </Container>
   );
 };
 
