@@ -1,4 +1,4 @@
-import React, { useContext, useEffect, useState } from "react";
+import React, { useContext, useEffect, useRef, useState } from "react";
 import styled from "styled-components";
 import colors from "./colors";
 import WebTorrent from "webtorrent";
@@ -41,6 +41,7 @@ const Video = styled.video`
 
 const PlayerBox: React.FC = () => {
   const ctx = useContext(AppContext);
+  const videoRef = useRef(null);
 
   const [torrentProgress, setTorrentProgress] = useState(0);
   const [torrentInfos, setTorrentInfos] = useState(
@@ -48,75 +49,80 @@ const PlayerBox: React.FC = () => {
       torrentInfoHash: string;
       torrentMagnetURI: string;
       torrentName: string;
-      torrentFiles: string[];
+      torrentFiles: any;
     }
   );
-  const [mp4File, setMp4File] = useState(null);
+  const [ready, setReady] = useState(false);
+  // const [mp4File, setMp4File] = useState(null);
 
   useEffect(() => {
     var client = new WebTorrent();
 
-    client.on("error", (err: { message: string }) => {
+    client.on("error", (err) => {
       console.log(ctx.movie);
       console.error(err);
-      console.log("[+] Webtorrent error: " + err.message);
+    });
+
+    client.on("torrent", function (torrent) {
+      console.log(torrent);
     });
 
     console.log(ctx.movie);
 
-    client.add(
-      ctx.movie,
-      (torrent: {
-        progress: number;
-        on: (arg0: string, arg1: () => void) => void;
-        infoHash: any;
-        magnetURI: any;
-        name: any;
-        files: any;
-      }) => {
-        // const interval = setInterval(() => {
-        //   // console.log('[+] Progress: ' + (torrent.progress * 100).toFixed(1) + '%')
-        //   if (mp4File) setTorrentProgress(torrent.progress * 100);
-        // }, 5000);
+    client.add(ctx.movie, (torrent) => {
+      console.log(torrent);
+      // const interval = setInterval(() => {
+      //   // console.log('[+] Progress: ' + (torrent.progress * 100).toFixed(1) + '%')
+      //   if (mp4File) setTorrentProgress(torrent.progress * 100);
+      // }, 5000);
 
-        torrent.on("done", () => {
-          console.log("Progress: 100%");
-          // clearInterval(interval);
-        });
+      torrent.on("done", () => {
+        console.log("Progress: 100%");
+        // clearInterval(interval);
+      });
 
-        document.title = `${torrent.name} SIONV`;
+      document.title = `${torrent.name} SIONV`;
 
-        setTorrentInfos({
-          torrentInfoHash: torrent.infoHash,
-          torrentMagnetURI: torrent.magnetURI,
-          torrentName: torrent.name,
-          torrentFiles: torrent.files,
-        });
+      setTorrentInfos({
+        torrentInfoHash: torrent.infoHash,
+        torrentMagnetURI: torrent.magnetURI,
+        torrentName: torrent.name,
+        torrentFiles: torrent.files,
+      });
 
-        var mp4File = torrent.files.find(function (file: { name: string }) {
-          console.log(file);
-          return file.name.endsWith(".mp4");
-        });
+      var mp4File = torrent.files.find(function (file: { name: string }) {
+        console.log(file);
+        return file.name.endsWith(".mp4");
+      });
 
-        console.log(mp4File.path);
+      console.log(mp4File);
 
-        setMp4File(mp4File.path);
+      // setMp4File(mp4File.path);
 
-        var file = torrent.files.find(function (file) {
-          return file.name.toLowerCase().endsWith(".mp4");
-        });
+      var file = torrent.files.find(function (file) {
+        return file.name.toLowerCase().endsWith(".mp4");
+      });
 
+      if (file) {
         file.renderTo("#player");
+        const player = (videoRef.current as unknown) as HTMLVideoElement;
+
+        if (player) {
+          player.muted = true;
+          player.autoplay = true;
+        }
       }
-    );
+    });
   }, [ctx.movie]);
 
   return (
     <Container>
       <ProgressBar progress={torrentProgress} />
       <Video
+        ref={videoRef}
         id="player"
         autoPlay
+        muted
         controls
         preload="auto"
         onProgress={(e) =>
@@ -126,16 +132,6 @@ const PlayerBox: React.FC = () => {
           )
         }
       />
-
-      {/* <h1>{torrentInfos.torrentName}</h1>
-        <p>
-          <b>Torrent Info Hash: </b>
-          {torrentInfos.torrentInfoHash}
-        </p>
-        <p>
-          <b>Torrent Progress: </b>
-          {torrentProgress}
-        </p> */}
     </Container>
   );
 };

@@ -4,7 +4,6 @@ import { AppContext } from "../App";
 
 const Container = styled.div`
   margin-top: 20px;
-  padding-left: 20px;
   display: flex;
   flex-direction: row;
   height: 200px;
@@ -12,6 +11,7 @@ const Container = styled.div`
 
 const MovieCard = styled.img`
   height: 100%;
+  margin-left: 20px;
 `;
 
 const MovieRows: React.FC<{

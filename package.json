@@ -46,6 +46,6 @@
   },
   "devDependencies": {
     "@types/styled-components": "^5.1.4",
-    "video.js": "^7.10.2"
+    "@types/webtorrent": "^0.109.0"
   }
 }
