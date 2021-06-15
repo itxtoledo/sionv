@@ -44,16 +44,14 @@ const PlayerBox: React.FC = () => {
   const videoRef = useRef(null);
 
   const [torrentProgress, setTorrentProgress] = useState(0);
-  const [torrentInfos, setTorrentInfos] = useState(
-    {} as {
-      torrentInfoHash: string;
-      torrentMagnetURI: string;
-      torrentName: string;
-      torrentFiles: any;
-    }
-  );
-  const [ready, setReady] = useState(false);
-  // const [mp4File, setMp4File] = useState(null);
+  // const [torrentInfos, setTorrentInfos] = useState(
+  //   {} as {
+  //     torrentInfoHash: string;
+  //     torrentMagnetURI: string;
+  //     torrentName: string;
+  //     torrentFiles: any;
+  //   }
+  // );
 
   useEffect(() => {
     var client = new WebTorrent();
@@ -83,12 +81,12 @@ const PlayerBox: React.FC = () => {
 
       document.title = `${torrent.name} SIONV`;
 
-      setTorrentInfos({
-        torrentInfoHash: torrent.infoHash,
-        torrentMagnetURI: torrent.magnetURI,
-        torrentName: torrent.name,
-        torrentFiles: torrent.files,
-      });
+      // setTorrentInfos({
+      //   torrentInfoHash: torrent.infoHash,
+      //   torrentMagnetURI: torrent.magnetURI,
+      //   torrentName: torrent.name,
+      //   torrentFiles: torrent.files,
+      // });
 
       var mp4File = torrent.files.find(function (file: { name: string }) {
         console.log(file);
@@ -105,7 +103,7 @@ const PlayerBox: React.FC = () => {
 
       if (file) {
         file.renderTo("#player");
-        const player = (videoRef.current as unknown) as HTMLVideoElement;
+        const player = videoRef.current as unknown as HTMLVideoElement;
 
         if (player) {
           player.muted = true;
